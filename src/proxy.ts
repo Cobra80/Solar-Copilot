@@ -1,35 +1,20 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 
-// Portail d'authentification (HTTP Basic Auth) pour le déploiement en ligne.
+// Portail d'authentification par session (cookie signé).
 //
-// - En PRODUCTION : `APP_PASSWORD` DOIT être défini, sinon l'app est verrouillée
-//   (503). On ne laisse jamais un déploiement public accessible sans mot de passe.
+// - En PRODUCTION : `APP_PASSWORD` DOIT être défini, sinon l'app est verrouillée (503).
 // - En LOCAL (dev) : si `APP_PASSWORD` n'est pas défini, l'accès reste libre.
 //
-// Une fois authentifié, le navigateur renvoie l'en-tête `Authorization` sur toutes
-// les requêtes de l'origine — pages ET appels `/api` déclenchés par le fetch client.
+// Sans session valide : les pages sont redirigées vers /login, les appels /api
+// reçoivent un 401. La page /login et l'API /api/login restent toujours accessibles.
 
-const REALM = 'Basic realm="Solar Copilot", charset="UTF-8"';
-
-function unauthorized(): NextResponse {
-  return new NextResponse("Authentification requise.", {
-    status: 401,
-    headers: { "WWW-Authenticate": REALM },
-  });
-}
-
-// Comparaison à temps constant (ne court-circuite pas selon le contenu/longueur).
-function safeEqual(a: string, b: string): boolean {
-  let diff = a.length ^ b.length;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i % b.length);
-  }
-  return diff === 0;
-}
+const PUBLIC_PATHS = new Set(["/login", "/api/login", "/api/logout"]);
 
 export function proxy(request: NextRequest): NextResponse {
   const password = process.env.APP_PASSWORD;
+  const { pathname } = request.nextUrl;
 
   if (!password) {
     // Fail-closed : jamais de déploiement public ouvert par défaut.
@@ -42,30 +27,26 @@ export function proxy(request: NextRequest): NextResponse {
     return NextResponse.next(); // dev local : accès libre
   }
 
-  const expectedUser = process.env.APP_USER || "solar";
-  const header = request.headers.get("authorization");
-  if (header?.startsWith("Basic ")) {
-    let decoded = "";
-    try {
-      decoded = atob(header.slice(6));
-    } catch {
-      return unauthorized();
-    }
-    const sep = decoded.indexOf(":");
-    const user = decoded.slice(0, sep);
-    const pass = decoded.slice(sep + 1);
-    // On évalue les deux comparaisons sans court-circuit conditionnel.
-    const okUser = safeEqual(user, expectedUser);
-    const okPass = safeEqual(pass, password);
-    if (okUser && okPass) return NextResponse.next();
+  // Connexion / déconnexion toujours accessibles.
+  if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
+
+  // Session valide → on laisse passer.
+  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  if (verifySessionToken(token)) return NextResponse.next();
+
+  // Non authentifié : API → 401 JSON ; pages → redirection vers /login (avec retour).
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
   }
-  return unauthorized();
+  const url = request.nextUrl.clone();
+  url.pathname = "/login";
+  url.search = "";
+  url.searchParams.set("next", pathname);
+  return NextResponse.redirect(url);
 }
 
 export const config = {
-  // Protège tout, sauf les assets statiques et les fichiers PWA (manifest + icônes) :
-  // ceux-ci ne contiennent rien de sensible et doivent rester accessibles pour que
-  // le chargement des ressources et l'installation de la PWA fonctionnent.
+  // Protège tout, sauf les assets statiques et les fichiers PWA (manifest + icônes).
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icon.svg|icon-192.png|icon-512.png|icon-maskable-512.png|apple-touch-icon.png).*)",
   ],

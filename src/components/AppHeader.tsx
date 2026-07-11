@@ -4,6 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+async function handleLogout() {
+  try {
+    await fetch("/api/logout", { method: "POST" });
+  } catch {
+    /* on redirige quand même */
+  }
+  window.location.href = "/login";
+}
+
 const TABS = [
   { href: "/", label: "Rapport" },
   { href: "/logs", label: "Analyse de logs" },
@@ -41,7 +50,17 @@ export default function AppHeader({ actions }: { actions?: ReactNode }) {
             ))}
           </div>
         </nav>
-        <div className="flex items-center gap-2">{actions}</div>
+        <div className="flex items-center gap-2">
+          {actions}
+          <button
+            onClick={handleLogout}
+            title="Se déconnecter"
+            aria-label="Se déconnecter"
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            Déconnexion
+          </button>
+        </div>
       </div>
     </header>
   );

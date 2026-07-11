@@ -91,7 +91,9 @@ condamnation, VAT, MALT-CC, habilitations). Voir `src/lib/domains.ts`.
 - `src/app/api/docs/ask` — POST question → réponse + ids des documents sources
 - `src/app/api/procedures` — GET/POST/DELETE des procédures enregistrées
 - `src/app/api/procedures/generate` — POST tâche → procédure + sources
-- `src/proxy.ts` — portail d'auth (HTTP Basic Auth, Next 16 « proxy » = ex-middleware, runtime Node). Fail-closed en production : sans `APP_PASSWORD` → 503. Assets statiques + fichiers PWA exclus du matcher
+- `src/proxy.ts` — portail d'auth (Next 16 « proxy » = ex-middleware, runtime Node). Session par **cookie signé** : sans session valide, les pages sont redirigées vers `/login`, les `/api/*` reçoivent 401. Fail-closed en production : sans `APP_PASSWORD` → 503. Assets statiques + fichiers PWA + `/login`,`/api/login`,`/api/logout` exclus/autorisés
+- `src/lib/auth.ts` — session : `createSessionToken()` / `verifySessionToken()` (jeton `v1.<exp>.<hmac>`, clé = `APP_PASSWORD`, HMAC-SHA256, durée 180 j), `checkPassword()`. Change de mot de passe → toutes les sessions invalidées
+- `src/app/login` + `src/app/api/login` + `src/app/api/logout` — page de connexion (mot de passe seul), pose/efface le cookie `sc_session` (HttpOnly, Secure en prod, SameSite=lax)
 - `src/components/AppHeader.tsx` — en-tête partagé avec navigation entre modules
 - `src/app/page.tsx` — interface rapport (client component). Les réponses asynchrones
   sont gardées par une « époque » (`epochRef`) : toute action qui change le rapport

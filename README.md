@@ -94,7 +94,10 @@ stockage fichier (`data/`) survit aux redéploiements (ce que Vercel ne permet p
 | `ANTHROPIC_API_KEY` | `sk-ant-…` | Appels Claude (même clé que ton `.env.local`) |
 | `APP_PASSWORD` | un mot de passe fort | **Obligatoire.** Protège l'accès public. Sans lui → l'app renvoie 503 |
 | `DATA_DIR` | `/data` | Écrit les données sur le volume persistant |
-| `APP_USER` | *(facultatif)* | Identifiant de connexion, défaut `solar` |
+
+> 🔑 **Connexion** : à la première visite, une page `/login` demande le mot de passe
+> **une seule fois** ; la session dure 180 jours (cookie). Un bouton « Déconnexion »
+> est disponible dans l'en-tête. Changer `APP_PASSWORD` déconnecte toutes les sessions.
 
 ### 2. Volume (indispensable — sinon perte de données à chaque déploiement)
 
@@ -126,7 +129,7 @@ ajoute le **Volume** et les **Variables**. Chaque `git push` redéploie tout seu
 
 ### 4. Après déploiement
 
-- Ouvre l'URL publique fournie par Railway → connexion demandée (`solar` + ton mot de passe).
+- Ouvre l'URL publique fournie par Railway → page de connexion (ton mot de passe, une seule fois).
 - Sur ton téléphone : ouvre l'URL, connecte-toi, puis « Ajouter à l'écran d'accueil ».
 - Le port est géré automatiquement par Railway (`next start` lit `PORT`).
 
