@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import AppHeader from "@/components/AppHeader";
+import DomainSelector, { useDomaine } from "@/components/DomainSelector";
+import { DOMAINE_EXEMPLES } from "@/lib/domains";
 import type { Case, CaseDraft, CaseSearchResult } from "@/lib/types";
-
-const EXEMPLE =
-  "huawei sun2000 erreur 206 string 4 tension basse, fusible dc 15A hs dans la boite de jonction, remplacé, controle serrage, redémarrage ok";
 
 function matchesFilter(c: Case, filter: string): boolean {
   const q = filter.trim().toLowerCase();
@@ -17,6 +16,7 @@ function matchesFilter(c: Case, filter: string): boolean {
 }
 
 export default function CarnetPage() {
+  const [domaine, setDomaine] = useDomaine();
   const [cases, setCases] = useState<Case[]>([]);
   const [filter, setFilter] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +86,7 @@ export default function CarnetPage() {
       const res = await fetch("/api/cases/structure", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: rawNotes }),
+        body: JSON.stringify({ notes: rawNotes, domaine }),
       });
       const data = await res.json();
       if (epochRef.current !== epoch) return;
@@ -207,14 +207,17 @@ export default function CarnetPage() {
         {/* Nouveau cas */}
         {showNew && (
           <section className="rounded-xl border border-amber-200 bg-white p-4 shadow-sm">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold text-slate-700">Nouveau cas de dépannage</h2>
-              <button
-                onClick={cancelNew}
-                className="text-xs text-slate-400 hover:text-slate-600"
-              >
-                Annuler
-              </button>
+              <div className="flex items-center gap-3">
+                <DomainSelector value={domaine} onChange={setDomaine} />
+                <button
+                  onClick={cancelNew}
+                  className="text-xs text-slate-400 hover:text-slate-600"
+                >
+                  Annuler
+                </button>
+              </div>
             </div>
 
             {!draft ? (
@@ -224,7 +227,7 @@ export default function CarnetPage() {
                     Décris le cas en vrac — l&apos;IA structure la fiche
                   </label>
                   <button
-                    onClick={() => setRawNotes(EXEMPLE)}
+                    onClick={() => setRawNotes(DOMAINE_EXEMPLES[domaine].carnet)}
                     className="text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
                   >
                     Charger un exemple

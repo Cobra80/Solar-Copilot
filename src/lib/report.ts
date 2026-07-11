@@ -1,5 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { getAnthropic, MODEL, toFriendlyError } from "./anthropic";
+import { domainePreambule, type Domaine } from "./domains";
 import { ReportSchema } from "./schema";
 import type { Report } from "./types";
 
@@ -28,7 +29,7 @@ const reportFormat = {
       productionRetablie: {
         type: "string",
         enum: ["oui", "non", "inconnu"],
-        description: "La production a-t-elle été rétablie ?",
+        description: "L'installation a-t-elle été remise en service / la production rétablie ?",
       },
     },
     required: [
@@ -47,7 +48,7 @@ const reportFormat = {
   },
 } as const;
 
-const REPORT_SYSTEM = `Tu es un assistant pour techniciens de maintenance (O&M) photovoltaïque.
+const REPORT_SYSTEM = `Tu es un assistant pour techniciens de maintenance (O&M) en électrotechnique (photovoltaïque, postes HTA, postes HTB).
 À partir de notes brutes prises sur le terrain, tu produis un rapport d'intervention structuré, clair et professionnel, en français.
 
 Règles :
@@ -55,10 +56,10 @@ Règles :
 - Si une information est absente, laisse le champ vide (chaîne "" ou liste []) plutôt que de deviner.
 - Reformule proprement le jargon et les abréviations de terrain en phrases professionnelles.
 - Les éléments de liste doivent être courts, concrets et exploitables.
-- Déduis le statut et l'état de la production uniquement à partir des indices présents dans les notes ; sinon "non résolu" / "inconnu".`;
+- Déduis le statut et la remise en service uniquement à partir des indices présents dans les notes ; sinon "non résolu" / "inconnu".`;
 
 const EMAIL_SYSTEM = `Tu rédiges des emails clients professionnels, clairs et concis, en français,
-pour une société de maintenance photovoltaïque, à partir d'un rapport d'intervention structuré.
+pour une société de maintenance électrotechnique, à partir d'un rapport d'intervention structuré.
 
 Consignes :
 - Ton courtois, rassurant, sans jargon inutile.
@@ -76,7 +77,7 @@ function assertUsable(response: Anthropic.Message, quoi: string): void {
 }
 
 /** Génère un rapport structuré à partir des notes de terrain. */
-export async function generateReport(notes: string): Promise<Report> {
+export async function generateReport(notes: string, domaine?: Domaine): Promise<Report> {
   const client = getAnthropic();
 
   let response: Anthropic.Message;
@@ -84,7 +85,7 @@ export async function generateReport(notes: string): Promise<Report> {
     response = await client.messages.create({
       model: MODEL,
       max_tokens: 4000,
-      system: REPORT_SYSTEM,
+      system: REPORT_SYSTEM + domainePreambule(domaine),
       messages: [{ role: "user", content: `Notes brutes de terrain :\n\n${notes}` }],
       output_config: { format: reportFormat },
     });
@@ -115,7 +116,7 @@ export async function generateReport(notes: string): Promise<Report> {
 }
 
 /** Génère un brouillon d'email client à partir d'un rapport. */
-export async function generateEmail(report: Report): Promise<string> {
+export async function generateEmail(report: Report, domaine?: Domaine): Promise<string> {
   const client = getAnthropic();
 
   let response: Anthropic.Message;
@@ -123,7 +124,7 @@ export async function generateEmail(report: Report): Promise<string> {
     response = await client.messages.create({
       model: MODEL,
       max_tokens: 2000,
-      system: EMAIL_SYSTEM,
+      system: EMAIL_SYSTEM + domainePreambule(domaine),
       messages: [
         {
           role: "user",

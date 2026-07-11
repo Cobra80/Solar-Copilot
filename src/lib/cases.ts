@@ -1,5 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { getAnthropic, MODEL, toFriendlyError } from "./anthropic";
+import { domainePreambule, type Domaine } from "./domains";
 import { CaseDraftSchema, CaseSearchResultSchema } from "./schema";
 import type { Case, CaseDraft, CaseSearchResult } from "./types";
 
@@ -27,7 +28,7 @@ const draftFormat = {
   },
 } as const;
 
-const STRUCTURE_SYSTEM = `Tu es un assistant pour techniciens de maintenance (O&M) photovoltaïque.
+const STRUCTURE_SYSTEM = `Tu es un assistant pour techniciens de maintenance (O&M) en électrotechnique (photovoltaïque, postes HTA, postes HTB).
 À partir d'une note brute de dépannage prise sur le terrain, tu crées une fiche structurée
 pour un carnet de dépannage personnel, en français.
 
@@ -57,7 +58,7 @@ function parseTextBlocks(response: Anthropic.Message): string {
 }
 
 /** Transforme une note brute en fiche de dépannage structurée. */
-export async function structureCase(notes: string): Promise<CaseDraft> {
+export async function structureCase(notes: string, domaine?: Domaine): Promise<CaseDraft> {
   const client = getAnthropic();
 
   let response: Anthropic.Message;
@@ -65,7 +66,7 @@ export async function structureCase(notes: string): Promise<CaseDraft> {
     response = await client.messages.create({
       model: MODEL,
       max_tokens: 2000,
-      system: STRUCTURE_SYSTEM,
+      system: STRUCTURE_SYSTEM + domainePreambule(domaine),
       messages: [{ role: "user", content: `Note brute de dépannage :\n\n${notes}` }],
       output_config: { format: draftFormat },
     });

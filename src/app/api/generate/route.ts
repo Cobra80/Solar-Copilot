@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateReport } from "@/lib/report";
+import { isDomaine } from "@/lib/domains";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  let notes: unknown;
+  let body: { notes?: unknown; domaine?: unknown };
   try {
-    ({ notes } = await req.json());
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "Corps de requête invalide." }, { status: 400 });
   }
+  const { notes, domaine } = body;
   if (typeof notes !== "string" || notes.trim().length === 0) {
     return NextResponse.json(
       { error: "Merci de saisir des notes d'intervention." },
@@ -18,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const report = await generateReport(notes);
+    const report = await generateReport(notes, isDomaine(domaine) ? domaine : undefined);
     return NextResponse.json({ report });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erreur inconnue.";

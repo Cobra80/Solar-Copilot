@@ -2,6 +2,8 @@
 
 import { useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from "react";
 import AppHeader from "@/components/AppHeader";
+import DomainSelector, { useDomaine } from "@/components/DomainSelector";
+import { DOMAINE_EXEMPLES } from "@/lib/domains";
 import type { Gravite, LogAnalysis, SanteGlobale } from "@/lib/types";
 
 const GRAVITE_STYLES: Record<Gravite, string> = {
@@ -45,6 +47,7 @@ function formatSize(bytes: number): string {
 }
 
 export default function LogsPage() {
+  const [domaine, setDomaine] = useDomaine();
   const [content, setContent] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileInfo, setFileInfo] = useState<string | null>(null);
@@ -117,7 +120,7 @@ export default function LogsPage() {
       const res = await fetch("/api/analyze-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, filename: fileName ?? undefined }),
+        body: JSON.stringify({ content, filename: fileName ?? undefined, domaine }),
       });
       const data = await res.json();
       if (epochRef.current !== epoch) return;
@@ -149,9 +152,12 @@ export default function LogsPage() {
       <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 print:block print:max-w-none print:p-0">
         {/* Import */}
         <section className="no-print rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 text-sm font-medium text-slate-700">
-            Logs d&apos;onduleur (SMA, Huawei, Sungrow, SolarEdge…)
-          </h2>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-medium text-slate-700">
+              Logs — {DOMAINE_EXEMPLES[domaine].logsHint}
+            </h2>
+            <DomainSelector value={domaine} onChange={setDomaine} />
+          </div>
 
           <div
             onClick={() => fileInputRef.current?.click()}

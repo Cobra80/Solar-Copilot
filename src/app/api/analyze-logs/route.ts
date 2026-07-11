@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeLogFile } from "@/lib/loganalysis";
+import { isDomaine } from "@/lib/domains";
 
 export const runtime = "nodejs";
 
@@ -14,7 +15,11 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Corps de requête invalide." }, { status: 400 });
   }
-  const { content, filename } = (body ?? {}) as { content?: unknown; filename?: unknown };
+  const { content, filename, domaine } = (body ?? {}) as {
+    content?: unknown;
+    filename?: unknown;
+    domaine?: unknown;
+  };
 
   if (typeof content !== "string" || content.trim().length === 0) {
     return NextResponse.json(
@@ -33,6 +38,7 @@ export async function POST(req: NextRequest) {
     const { analysis, truncated } = await analyzeLogFile(
       content,
       typeof filename === "string" ? filename : undefined,
+      isDomaine(domaine) ? domaine : undefined,
     );
     return NextResponse.json({ analysis, truncated });
   } catch (err) {

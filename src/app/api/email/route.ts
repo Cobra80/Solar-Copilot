@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateEmail } from "@/lib/report";
+import { isDomaine } from "@/lib/domains";
 import { ReportSchema } from "@/lib/schema";
 
 export const runtime = "nodejs";
@@ -15,9 +16,10 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Rapport manquant ou invalide." }, { status: 400 });
   }
+  const domaine = (body as { domaine?: unknown })?.domaine;
 
   try {
-    const email = await generateEmail(parsed.data);
+    const email = await generateEmail(parsed.data, isDomaine(domaine) ? domaine : undefined);
     return NextResponse.json({ email });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erreur inconnue.";

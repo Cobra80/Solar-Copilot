@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import AppHeader from "@/components/AppHeader";
+import DomainSelector, { useDomaine } from "@/components/DomainSelector";
+import { DOMAINE_EXEMPLES } from "@/lib/domains";
 import type { DocMeta, Procedure, ProcedureRecord } from "@/lib/types";
 
-const EXEMPLE = "Remplacement d'un optimiseur SolarEdge sur toiture inclinée";
-
 export default function ProceduresPage() {
+  const [domaine, setDomaine] = useDomaine();
   const [demande, setDemande] = useState("");
   const [procedure, setProcedure] = useState<Procedure | null>(null);
   const [docIds, setDocIds] = useState<string[]>([]);
@@ -51,7 +52,7 @@ export default function ProceduresPage() {
       const res = await fetch("/api/procedures/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ demande }),
+        body: JSON.stringify({ demande, domaine }),
       });
       const data = await res.json();
       if (epochRef.current !== epoch) return;
@@ -213,23 +214,26 @@ export default function ProceduresPage() {
         <main className="flex flex-col gap-6 print:block">
           {/* Demande */}
           <section className="no-print rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <label htmlFor="demande" className="text-sm font-medium text-slate-700">
                 Décris la tâche
               </label>
-              <button
-                onClick={() => setDemande(EXEMPLE)}
-                className="text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
-              >
-                Charger un exemple
-              </button>
+              <div className="flex items-center gap-3">
+                <DomainSelector value={domaine} onChange={setDomaine} />
+                <button
+                  onClick={() => setDemande(DOMAINE_EXEMPLES[domaine].procedure)}
+                  className="text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+                >
+                  Charger un exemple
+                </button>
+              </div>
             </div>
             <textarea
               id="demande"
               value={demande}
               onChange={(e) => setDemande(e.target.value)}
               rows={2}
-              placeholder="ex : remplacement d'un optimiseur SolarEdge sur toiture inclinée"
+              placeholder={`ex : ${DOMAINE_EXEMPLES[domaine].procedure}`}
               className="w-full resize-y rounded-lg border border-slate-300 p-3 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
             />
             <div className="mt-3 flex items-center gap-3">

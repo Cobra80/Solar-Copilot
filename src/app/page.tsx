@@ -3,10 +3,9 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
+import DomainSelector, { useDomaine } from "@/components/DomainSelector";
+import { DOMAINE_EXEMPLES } from "@/lib/domains";
 import type { Intervention, Report, Statut, ProductionRetablie } from "@/lib/types";
-
-const EXEMPLE =
-  "onduleur 3 défaut isolement 14h32 reset ok production rétablie";
 
 const STATUT_STYLES: Record<Statut, string> = {
   "résolu": "bg-emerald-100 text-emerald-800 ring-emerald-600/20",
@@ -23,6 +22,7 @@ const PRODUCTION_LABEL: Record<ProductionRetablie, string> = {
 
 export default function Home() {
   const router = useRouter();
+  const [domaine, setDomaine] = useDomaine();
   const [notes, setNotes] = useState("");
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,7 +74,7 @@ export default function Home() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes }),
+        body: JSON.stringify({ notes, domaine }),
       });
       const data = await res.json();
       if (epochRef.current !== epoch) return; // l'utilisateur a changé de contexte
@@ -130,7 +130,7 @@ export default function Home() {
       const res = await fetch("/api/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ report }),
+        body: JSON.stringify({ report, domaine }),
       });
       const data = await res.json();
       if (epochRef.current !== epoch) return; // le rapport affiché a changé
@@ -209,7 +209,7 @@ export default function Home() {
       const res = await fetch("/api/cases/structure", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: texte }),
+        body: JSON.stringify({ notes: texte, domaine }),
       });
       const data = await res.json();
       if (epochRef.current !== epoch) return;
@@ -317,23 +317,26 @@ export default function Home() {
         <main className="flex flex-col gap-6 print:block">
           {/* Saisie des notes */}
           <section className="no-print rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <label htmlFor="notes" className="text-sm font-medium text-slate-700">
                 Notes de terrain
               </label>
-              <button
-                onClick={() => setNotes(EXEMPLE)}
-                className="text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
-              >
-                Charger un exemple
-              </button>
+              <div className="flex items-center gap-3">
+                <DomainSelector value={domaine} onChange={setDomaine} />
+                <button
+                  onClick={() => setNotes(DOMAINE_EXEMPLES[domaine].rapport)}
+                  className="text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+                >
+                  Charger un exemple
+                </button>
+              </div>
             </div>
             <textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={5}
-              placeholder="Colle ici tes notes brutes… ex : onduleur 3 défaut isolement 14h32 reset ok production rétablie"
+              placeholder={`Colle ici tes notes brutes… ex : ${DOMAINE_EXEMPLES[domaine].rapport}`}
               className="w-full resize-y rounded-lg border border-slate-300 p-3 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
             />
             <div className="mt-3 flex items-center gap-3">

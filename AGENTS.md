@@ -6,9 +6,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Solar Copilot
 
-Boîte à outils IA pour techniciens de maintenance (O&M) photovoltaïque. Vision : un
-seul produit (base de connaissances + assistant IA) avec plusieurs modules posés sur
-un socle commun (LLM Claude, futur RAG, export PDF/email).
+Boîte à outils IA pour techniciens de maintenance (O&M) **électrotechnique** :
+photovoltaïque, postes HTA et postes HTB. (Le nom « Solar Copilot » est conservé
+même si la portée dépasse le solaire.) Vision : un seul produit (base de connaissances
++ assistant IA) avec plusieurs modules posés sur un socle commun (LLM Claude, futur
+RAG, export PDF/email).
+
+**Sélecteur de domaine (PV / HTA / HTB).** Chaque module qui appelle l'IA (rapport,
+logs, carnet, procédures) porte un sélecteur de domaine. Le choix est mémorisé et
+partagé entre modules (localStorage `solar-copilot-domaine`, via `useDomaine()`), et
+injecté dans les prompts par `domainePreambule(domaine)` — ce qui ancre vocabulaire,
+équipements et **consignes de sécurité** (ex. consignation HTA/HTB : séparation,
+condamnation, VAT, MALT-CC, habilitations). Voir `src/lib/domains.ts`.
 
 **Modules en place :**
 1. **Rapport d'intervention** (`/`) — notes de terrain → rapport structuré, export PDF,
@@ -55,6 +64,8 @@ un socle commun (LLM Claude, futur RAG, export PDF/email).
 ## Carte du code
 
 - `src/lib/types.ts` — types partagés (sans dépendance runtime → importables côté client)
+- `src/lib/domains.ts` — domaines métier (PV/HTA/HTB) : type `Domaine`, `DOMAINE_CONTEXTE` (contexte injecté dans les prompts), `domainePreambule()`, exemples par domaine. Sans dépendance runtime
+- `src/components/DomainSelector.tsx` — contrôle segmenté PV/HTA/HTB + hook `useDomaine()` (choix mémorisé en localStorage, partagé entre modules)
 - `src/lib/schema.ts` — schéma zod du rapport (`z.ZodType<Report>`, synchronisé au type par le compilateur) ; valide la sortie du modèle et les bodies des routes
 - `src/lib/anthropic.ts` — client Claude (construction paresseuse) + `toFriendlyError()` (messages clairs pour 401/429/5xx/réseau)
 - `src/lib/report.ts` — génération du rapport (structured outputs) et de l'email ; vérifie `stop_reason` (troncature/refus) avant de parser

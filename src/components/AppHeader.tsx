@@ -21,7 +21,7 @@ export default function AppHeader({ actions }: { actions?: ReactNode }) {
           <span className="text-2xl">☀️</span>
           <div>
             <h1 className="text-lg font-semibold leading-none text-slate-900">Solar Copilot</h1>
-            <p className="text-xs text-slate-500">Boîte à outils O&amp;M photovoltaïque</p>
+            <p className="text-xs text-slate-500">Boîte à outils O&amp;M électrotechnique · PV · HTA · HTB</p>
           </div>
         </div>
         <nav className="order-last w-full overflow-x-auto rounded-lg bg-slate-100 p-1 md:order-none md:w-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

@@ -1,6 +1,10 @@
 # ☀️ Solar Copilot
 
-Boîte à outils IA pour techniciens de maintenance (O&M) photovoltaïque.
+Boîte à outils IA pour techniciens de maintenance (O&M) électrotechnique :
+**photovoltaïque, postes HTA et postes HTB**. Un sélecteur de domaine (PV / HTA / HTB)
+présent sur chaque module adapte l'IA au métier de l'intervention — vocabulaire,
+équipements et surtout consignes de sécurité (consignation HTA/HTB, VAT, MALT-CC,
+habilitations…).
 
 **Module 1 — Rapport d'intervention** (`/`) : colle tes notes brutes de terrain,
 l'app génère un rapport d'intervention structuré (constat, actions, recommandations,

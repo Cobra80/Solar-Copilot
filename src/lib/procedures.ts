@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { getAnthropic, MODEL, toFriendlyError } from "./anthropic";
 import { buildContextParts, gatherContext } from "./brain";
+import { domainePreambule, type Domaine } from "./domains";
 import { GeneratedProcedureSchema } from "./schema";
 import type { Case, DocEntry, Procedure } from "./types";
 
@@ -68,7 +69,7 @@ const procedureFormat = {
   },
 } as const;
 
-const PROCEDURE_SYSTEM = `Tu es un expert en maintenance photovoltaïque et en sécurité électrique.
+const PROCEDURE_SYSTEM = `Tu es un expert en maintenance électrotechnique (photovoltaïque, postes HTA, postes HTB) et en sécurité électrique.
 Tu rédiges des procédures d'intervention opérationnelles pour des techniciens de terrain, en français.
 
 On peut te fournir des documents de la bibliothèque personnelle du technicien (notices constructeur,
@@ -100,6 +101,7 @@ export async function generateProcedure(
   demande: string,
   docs: DocEntry[],
   cases: Case[],
+  domaine?: Domaine,
 ): Promise<{ procedure: Procedure; docIds: string[] }> {
   const client = getAnthropic();
 
@@ -116,7 +118,7 @@ export async function generateProcedure(
     response = await client.messages.create({
       model: MODEL,
       max_tokens: 8000,
-      system: PROCEDURE_SYSTEM,
+      system: PROCEDURE_SYSTEM + domainePreambule(domaine),
       messages: [{ role: "user", content }],
       output_config: { format: procedureFormat },
     });

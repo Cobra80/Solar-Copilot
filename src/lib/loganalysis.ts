@@ -1,5 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { getAnthropic, MODEL, toFriendlyError } from "./anthropic";
+import { domainePreambule, type Domaine } from "./domains";
 import { LogAnalysisSchema } from "./schema";
 import type { LogAnalysis } from "./types";
 
@@ -78,7 +79,7 @@ const analysisFormat = {
   },
 } as const;
 
-const ANALYSIS_SYSTEM = `Tu es un expert en maintenance (O&M) photovoltaïque, spécialiste de l'analyse des journaux d'onduleurs (SMA, Huawei, Sungrow, SolarEdge, Fronius…).
+const ANALYSIS_SYSTEM = `Tu es un expert en maintenance (O&M) électrotechnique, spécialiste de l'analyse des journaux d'équipements : onduleurs PV (SMA, Huawei, Sungrow, SolarEdge, Fronius…), relais de protection HTA/HTB (Sepam, MiCOM…), automates et systèmes SCADA / téléconduite.
 
 À partir d'un extrait de logs (CSV ou texte, tout format constructeur), tu produis une analyse structurée en français :
 - Regroupe les erreurs par code/type et compte leurs occurrences réelles dans l'extrait.
@@ -130,10 +131,11 @@ function assertUsable(response: Anthropic.Message): void {
   }
 }
 
-/** Analyse un extrait de logs d'onduleur et renvoie une synthèse structurée. */
+/** Analyse un extrait de logs d'équipement et renvoie une synthèse structurée. */
 export async function analyzeLogFile(
   raw: string,
   filename?: string,
+  domaine?: Domaine,
 ): Promise<{ analysis: LogAnalysis; truncated: boolean }> {
   const client = getAnthropic();
   const { content, truncated } = prepareLogContent(raw);
@@ -153,7 +155,7 @@ export async function analyzeLogFile(
     response = await client.messages.create({
       model: MODEL,
       max_tokens: 8000,
-      system: ANALYSIS_SYSTEM,
+      system: ANALYSIS_SYSTEM + domainePreambule(domaine),
       messages: [{ role: "user", content: `${intro}\n\n${content}` }],
       output_config: { format: analysisFormat },
     });
