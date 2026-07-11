@@ -75,8 +75,59 @@ L'app est installable sur l'écran d'accueil (plein écran, comme une vraie app)
 4. **iPhone (Safari)** : Partager → « Sur l'écran d'accueil ».
    **Android (Chrome)** : menu ⋮ → « Installer l'application » / « Ajouter à l'écran d'accueil ».
 
-⚠️ L'app ne tourne que **si le PC est allumé et sur le même Wi-Fi**. Pour un accès
-partout (4G, hors du réseau), il faut un vrai déploiement — voir la feuille de route.
+⚠️ En Wi-Fi local, l'app ne tourne que **si le PC est allumé et sur le même réseau**.
+Pour un accès partout (4G, hors du réseau), déploie-la en ligne ⤵️
+
+## 🚀 Déploiement en ligne (Railway)
+
+Railway fait tourner l'app dans un **conteneur persistant** avec un **volume** : le
+stockage fichier (`data/`) survit aux redéploiements (ce que Vercel ne permet pas).
+
+### 1. Variables d'environnement (à définir dans Railway)
+
+| Variable | Valeur | Rôle |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | `sk-ant-…` | Appels Claude (même clé que ton `.env.local`) |
+| `APP_PASSWORD` | un mot de passe fort | **Obligatoire.** Protège l'accès public. Sans lui → l'app renvoie 503 |
+| `DATA_DIR` | `/data` | Écrit les données sur le volume persistant |
+| `APP_USER` | *(facultatif)* | Identifiant de connexion, défaut `solar` |
+
+### 2. Volume (indispensable — sinon perte de données à chaque déploiement)
+
+Ajoute un **Volume** avec pour point de montage `/data` (identique à `DATA_DIR`).
+
+### 3. Déployer — au choix
+
+**Option A — CLI Railway (le plus rapide, sans GitHub) :**
+
+```bash
+npm i -g @railway/cli
+railway login      # ouvre le navigateur pour t'authentifier
+railway init       # crée le projet
+railway up         # déploie le dossier courant
+```
+
+Puis dans le dashboard Railway : ajoute le **Volume** (`/data`) et les **Variables**,
+et relance un déploiement (`railway up` ou bouton *Redeploy*).
+
+**Option B — GitHub (auto-déploiement à chaque `git push`) :**
+
+```bash
+git remote add origin https://github.com/<toi>/solar-copilot.git
+git push -u origin main
+```
+
+Puis Railway → *New Project* → *Deploy from GitHub repo* → sélectionne le repo,
+ajoute le **Volume** et les **Variables**. Chaque `git push` redéploie tout seul.
+
+### 4. Après déploiement
+
+- Ouvre l'URL publique fournie par Railway → connexion demandée (`solar` + ton mot de passe).
+- Sur ton téléphone : ouvre l'URL, connecte-toi, puis « Ajouter à l'écran d'accueil ».
+- Le port est géré automatiquement par Railway (`next start` lit `PORT`).
+
+> 💰 **Coût** : Railway est payant à l'usage (plan Hobby ~5 $/mois). L'app est légère.
+> Ta clé API tourne côté serveur Railway : chaque génération consomme des tokens.
 
 ## Fonctionnalités
 

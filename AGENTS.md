@@ -65,6 +65,7 @@ un socle commun (LLM Claude, futur RAG, export PDF/email).
 - `src/lib/procedures.ts` — génération de procédures fondée sur la bibliothèque (valeurs précises jamais inventées)
 - `src/lib/docstore.ts` — index `data/documents.json` (texte extrait inclus) + fichiers originaux `data/docs/<uuid>.<ext>`
 - `src/lib/procstore.ts` — persistance des procédures (`data/procedures.json`)
+- `src/lib/paths.ts` — racine de stockage `DATA_DIR` (env `DATA_DIR` sinon `./data`) : pointe vers un volume persistant en prod (Railway)
 - `src/lib/jsonstore.ts` — fabrique de stores JSON : écriture atomique (tmp+rename), fichier corrompu mis de côté en `.corrupt-<ts>` (jamais écrasé), écritures sérialisées par file de promesses propre à chaque store
 - `src/lib/store.ts` — persistance des interventions (sur jsonstore)
 - `src/lib/casestore.ts` — persistance des fiches de dépannage (sur jsonstore, `data/cases.json`)
@@ -79,6 +80,7 @@ un socle commun (LLM Claude, futur RAG, export PDF/email).
 - `src/app/api/docs/ask` — POST question → réponse + ids des documents sources
 - `src/app/api/procedures` — GET/POST/DELETE des procédures enregistrées
 - `src/app/api/procedures/generate` — POST tâche → procédure + sources
+- `src/proxy.ts` — portail d'auth (HTTP Basic Auth, Next 16 « proxy » = ex-middleware, runtime Node). Fail-closed en production : sans `APP_PASSWORD` → 503. Assets statiques + fichiers PWA exclus du matcher
 - `src/components/AppHeader.tsx` — en-tête partagé avec navigation entre modules
 - `src/app/page.tsx` — interface rapport (client component). Les réponses asynchrones
   sont gardées par une « époque » (`epochRef`) : toute action qui change le rapport
@@ -91,10 +93,21 @@ un socle commun (LLM Claude, futur RAG, export PDF/email).
 
 ## Config
 
-Clé API dans `.env.local` : `ANTHROPIC_API_KEY=...` (voir `.env.local.example`).
+Variables d'environnement (`.env.local` en local, dashboard Railway en prod ; voir
+`.env.local.example`) :
+- `ANTHROPIC_API_KEY` — clé API Claude (obligatoire)
+- `APP_PASSWORD` — mot de passe d'accès. **Obligatoire en prod** (sinon 503) ; vide en
+  local = accès libre. `APP_USER` facultatif (défaut `solar`)
+- `DATA_DIR` — dossier de stockage ; en prod, le point de montage du volume (`/data`)
 
 ## Lancer
 
 ```bash
-npm run dev   # http://localhost:3000
+npm run dev     # http://localhost:3000 (dev)
+npm run build && npm run start   # build + serveur de production (ce que Railway exécute)
 ```
+
+## Déploiement
+
+Railway (conteneur persistant + volume monté sur `DATA_DIR`). Étapes détaillées :
+voir la section « Déploiement en ligne » du `README.md`.
