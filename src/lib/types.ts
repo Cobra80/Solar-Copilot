@@ -137,3 +137,20 @@ export interface ProcedureRecord {
   procedure: Procedure;
   docIds: string[]; // sources de la bibliothèque utilisées ("carnet" possible)
 }
+
+// ---- Module 6 : To-do / rappels ----
+
+/** Contenu d'une tâche (avant enregistrement). */
+export interface TacheDraft {
+  titre: string;
+  echeance: string; // "YYYY-MM-DD" ou "" si sans échéance
+  note: string; // détails / contexte ("" si aucun)
+}
+
+/** Tâche enregistrée dans la to-do. */
+export interface Tache extends TacheDraft {
+  id: string;
+  createdAt: string; // ISO 8601
+  fait: boolean;
+  faitAt: string; // ISO 8601 ou "" tant que non faite
+}

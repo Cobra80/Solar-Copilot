@@ -39,6 +39,12 @@ couvre le sujet, la procédure s'appuie dessus (les valeurs précises — couple
 serrage, références — viennent de tes documents, jamais inventées) et cite ses
 sources. Enregistrable et exportable en PDF.
 
+**Module 6 — À faire / To-do** (`/taches`) : ajoute une tâche en un éclair (titre +
+échéance), ou **colle un pavé de consignes en vrac** (« demain rappeler X, finir le
+rapport Y, formation vendredi… ») → l'IA le découpe en tâches datées, résout
+« aujourd'hui / demain / vendredi » et range les dépendances en note. Liste groupée
+par échéance (en retard / aujourd'hui / à venir / terminé).
+
 **Les modules se parlent :** un bouton « 📓 Ajouter au carnet » sur chaque rapport
 d'intervention convertit le rapport en fiche pré-remplie ; le Cerveau consulte
 automatiquement le carnet en plus des documents ; le générateur de procédures
@@ -143,6 +149,7 @@ ajoute le **Volume** et les **Variables**. Chaque `git push` redéploie tout seu
 - 📓 Carnet de dépannage : fiches structurées par l'IA + recherche en langage naturel
 - 🧠 Second cerveau : bibliothèque de documents interrogeable (réponses sourcées)
 - 📋 Générateur de procédures : EPI, risques, matériel, étapes — fondé sur ta bibliothèque
+- ✅ To-do : ajout rapide + découpage IA d'un pavé de consignes en tâches datées
 - 📄 Export PDF (via l'impression du navigateur → « Enregistrer au format PDF »)
 - ✉️ Génération d'un email client prêt à envoyer
 - 🗂️ Données stockées localement dans `data/` (interventions, fiches, documents, procédures)

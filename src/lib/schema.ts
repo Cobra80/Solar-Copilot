@@ -6,6 +6,7 @@ import type {
   LogAnalysis,
   Procedure,
   Report,
+  TacheDraft,
 } from "./types";
 
 // Schéma de validation runtime du rapport.
@@ -114,4 +115,33 @@ export const ProcedureSchema: z.ZodType<Procedure> = z.object(procedureShape);
 export const GeneratedProcedureSchema = z.object({
   ...procedureShape,
   docIds: z.array(z.string()),
+});
+
+// ---- Module 6 : to-do / rappels ----
+
+// Une échéance est soit vide, soit une date "YYYY-MM-DD".
+const echeanceSchema = z
+  .string()
+  .refine((s) => s === "" || /^\d{4}-\d{2}-\d{2}$/.test(s), "Échéance invalide (attendu YYYY-MM-DD ou vide).");
+
+// Contenu d'une tâche (ajout manuel ou issu du découpage IA).
+export const TacheDraftSchema: z.ZodType<TacheDraft> = z.object({
+  titre: z.string().min(1),
+  echeance: echeanceSchema,
+  note: z.string(),
+});
+
+// Modification partielle d'une tâche (cocher/décocher, éditer).
+export const TachePatchSchema = z
+  .object({
+    titre: z.string().min(1),
+    echeance: echeanceSchema,
+    note: z.string(),
+    fait: z.boolean(),
+  })
+  .partial();
+
+// Découpage IA d'un pavé de texte en plusieurs tâches.
+export const TachesParseSchema = z.object({
+  taches: z.array(TacheDraftSchema),
 });

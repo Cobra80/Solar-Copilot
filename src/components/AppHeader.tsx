@@ -15,6 +15,7 @@ async function handleLogout() {
 
 const TABS = [
   { href: "/", label: "Rapport" },
+  { href: "/taches", label: "À faire" },
   { href: "/logs", label: "Analyse de logs" },
   { href: "/carnet", label: "Carnet" },
   { href: "/cerveau", label: "Cerveau" },

@@ -37,6 +37,11 @@ condamnation, VAT, MALT-CC, habilitations). Voir `src/lib/domains.ts`.
    sur la bibliothèque (les valeurs précises viennent des documents, jamais
    inventées — « voir notice constructeur » sinon), sources citées, enregistrable
    et exportable en PDF.
+6. **À faire / To-do** (`/taches`) — ajout rapide (titre + échéance) et **découpage
+   IA** : on colle un pavé de consignes en vrac, l'IA le découpe en tâches datées
+   (résout « aujourd'hui / demain / vendredi » via la date du jour, met les
+   dépendances en note). Liste groupée : en retard / aujourd'hui / à venir / sans
+   échéance / terminé. Pas de sélecteur de domaine (transverse).
 
 **Ponts entre modules :**
 - Rapport → Carnet : bouton « Ajouter au carnet » sur un rapport ; conversion IA en
@@ -74,10 +79,12 @@ condamnation, VAT, MALT-CC, habilitations). Voir `src/lib/domains.ts`.
 - `src/lib/extract.ts` — extraction de texte à l'import : pdf-parse v2 (`new PDFParse({data}).getText()`), repli transcription Claude si PDF scanné (< 100 car. extraits, max 30 p./10 Mo), mammoth pour .docx, transcription Claude pour les images. ⚠️ pdf-parse doit rester dans `serverExternalPackages` (next.config.ts) : il ne se bundle pas
 - `src/lib/brain.ts` — second cerveau : résumé + mots-clés à l'import ; réponse en 2 étapes (sélection des docs pertinents sur résumés → réponse sur texte complet, budget 250k car.) ; étape 1 sautée si la bibliothèque < 80k car. Exporte `gatherContext()` / `buildContextParts()` (partagés avec les procédures)
 - `src/lib/procedures.ts` — génération de procédures fondée sur la bibliothèque (valeurs précises jamais inventées)
+- `src/lib/todoparse.ts` — découpage IA d'un pavé de texte en tâches datées (structured outputs) ; reçoit la date du jour + le jour de la semaine pour résoudre les échéances relatives
+- `src/lib/todostore.ts` — persistance des tâches (`data/todos.json`) ; tri à faire→terminé puis par échéance
 - `src/lib/docstore.ts` — index `data/documents.json` (texte extrait inclus) + fichiers originaux `data/docs/<uuid>.<ext>`
 - `src/lib/procstore.ts` — persistance des procédures (`data/procedures.json`)
 - `src/lib/paths.ts` — racine de stockage `DATA_DIR` (env `DATA_DIR` sinon `./data`) : pointe vers un volume persistant en prod (Railway)
-- `src/lib/jsonstore.ts` — fabrique de stores JSON : écriture atomique (tmp+rename), fichier corrompu mis de côté en `.corrupt-<ts>` (jamais écrasé), écritures sérialisées par file de promesses propre à chaque store
+- `src/lib/jsonstore.ts` — fabrique de stores JSON : écriture atomique (tmp+rename), fichier corrompu mis de côté en `.corrupt-<ts>` (jamais écrasé), écritures sérialisées par file de promesses propre à chaque store. Méthodes `list`/`add`/`update`/`remove`
 - `src/lib/store.ts` — persistance des interventions (sur jsonstore)
 - `src/lib/casestore.ts` — persistance des fiches de dépannage (sur jsonstore, `data/cases.json`)
 - `src/app/api/generate` — POST notes → rapport structuré
@@ -91,6 +98,8 @@ condamnation, VAT, MALT-CC, habilitations). Voir `src/lib/domains.ts`.
 - `src/app/api/docs/ask` — POST question → réponse + ids des documents sources
 - `src/app/api/procedures` — GET/POST/DELETE des procédures enregistrées
 - `src/app/api/procedures/generate` — POST tâche → procédure + sources
+- `src/app/api/todos` — GET/POST/PATCH/DELETE des tâches
+- `src/app/api/todos/parse` — POST pavé de texte → tâches datées découpées par l'IA
 - `src/proxy.ts` — portail d'auth (Next 16 « proxy » = ex-middleware, runtime Node). Session par **cookie signé** : sans session valide, les pages sont redirigées vers `/login`, les `/api/*` reçoivent 401. Fail-closed en production : sans `APP_PASSWORD` → 503. Assets statiques + fichiers PWA + `/login`,`/api/login`,`/api/logout` exclus/autorisés
 - `src/lib/auth.ts` — session : `createSessionToken()` / `verifySessionToken()` (jeton `v1.<exp>.<hmac>`, clé = `APP_PASSWORD`, HMAC-SHA256, durée 1 an — cf. `MAX_AGE_DAYS`), `checkPassword()`. Change de mot de passe → toutes les sessions invalidées
 - `src/app/login` + `src/app/api/login` + `src/app/api/logout` — page de connexion (mot de passe seul), pose/efface le cookie `sc_session` (HttpOnly, Secure en prod, SameSite=lax)

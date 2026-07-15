@@ -18,6 +18,8 @@ export interface JsonStore<T extends { id: string }> {
   list(): Promise<T[]>;
   /** Ajoute un élément complet (id inclus) et le renvoie. */
   add(item: T): Promise<T>;
+  /** Applique une modification partielle à un élément ; renvoie l'élément à jour (ou null si absent). */
+  update(id: string, patch: Partial<Omit<T, "id">>): Promise<T | null>;
   /** Supprime par identifiant. */
   remove(id: string): Promise<void>;
 }
@@ -79,6 +81,17 @@ export function createJsonStore<T extends { id: string }>(filename: string): Jso
         items.push(item);
         await writeAll(items);
         return item;
+      });
+    },
+    update(id: string, patch: Partial<Omit<T, "id">>): Promise<T | null> {
+      return withLock(async () => {
+        const items = await readAll();
+        const idx = items.findIndex((i) => i.id === id);
+        if (idx === -1) return null;
+        const updated = { ...items[idx], ...patch, id: items[idx].id };
+        items[idx] = updated;
+        await writeAll(items);
+        return updated;
       });
     },
     remove(id: string): Promise<void> {
