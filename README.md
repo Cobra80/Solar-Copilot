@@ -96,7 +96,7 @@ stockage fichier (`data/`) survit aux redéploiements (ce que Vercel ne permet p
 | `DATA_DIR` | `/data` | Écrit les données sur le volume persistant |
 
 > 🔑 **Connexion** : à la première visite, une page `/login` demande le mot de passe
-> **une seule fois** ; la session dure 180 jours (cookie). Un bouton « Déconnexion »
+> **une seule fois** ; la session dure 1 an (cookie). Un bouton « Déconnexion »
 > est disponible dans l'en-tête. Changer `APP_PASSWORD` déconnecte toutes les sessions.
 
 ### 2. Volume (indispensable — sinon perte de données à chaque déploiement)

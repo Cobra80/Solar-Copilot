@@ -11,9 +11,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const SESSION_COOKIE = "sc_session";
 
-// Durée de vie de la session : 180 jours → en pratique, on se connecte « une fois ».
-const MAX_AGE_DAYS = 180;
-export const SESSION_MAX_AGE = MAX_AGE_DAYS * 24 * 60 * 60; // secondes (pour le cookie)
+// Durée de vie de la session : 1 an → en pratique, on se connecte « une fois ».
+const MAX_AGE_DAYS = 365;
+export const SESSION_MAX_AGE = MAX_AGE_DAYS * 24 * 60 * 60; // secondes (pour le cookie) — 1 an
 const VERSION = "v1";
 
 function key(): string {
